@@ -15,8 +15,6 @@ const puppeteer = require('puppeteer');
   const browser = await puppeteer.launch(CONFIG.puppeteer)
   const page = await browser.newPage()
 
-  const navigationPromise = page.waitForNavigation()
-
   await page.goto('https://saprd.my.uh.edu/')
 
   // Select "UH Central"

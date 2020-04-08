@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "postinstall": "sh postinstall.sh"
   },
@@ -11,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "puppeteer": "^2.1.1"
+    "puppeteer": "^2.1.1",
+    "rrule": "^2.6.4",
+    "uuid": "^7.0.3"
   }
 }
