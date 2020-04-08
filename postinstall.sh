@@ -3,8 +3,13 @@
 # https://stackoverflow.com/a/2871034
 set -e
 
-if [[ -z "${PEOPLESOFT_SKIP_POSTINSTALLSH}" ]]; then
-  return 1
+if [ -n "${PEOPLESOFT_SKIP_POSTINSTALLSH}" ]]; then
+  return 0;
+fi
+
+if [ -n "${CHROME_DEVEL_SANDBOX}" ]; then
+  echo "CHROME_DEVEL_SANDBOX is already set.";
+  return 0;
 fi
 
 # reference: https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md#alternative-setup-setuid-sandbox
