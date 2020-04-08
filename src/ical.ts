@@ -2,12 +2,19 @@ import { RRule, RRuleSet, rrulestr } from 'rrule'
 import { v4 as uuid } from 'uuid'
 import AvailableSection from './AvailableSection'
 
+import { timeParse } from 'd3-time-format'
+const parseTime = timeParse('%m/%d/%Y %I:%M%p') // 01/13/2020 5:30PM
+
 export function toDT(d: Date) {
-    return `${toD(d)}T${d.getHours()}${d.getMinutes}${d.getSeconds()}Z`
+    const pad = (n: number) => n.toString().padStart(2, '0')
+
+    return `${toD(d)}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}Z`
 }
 
 export function toD(d: Date) {
-    return `${d.getFullYear()}${d.getMonth()+1}${d.getDate()+1}`
+    const pad = (n: number) => n.toString().padStart(2, '0')
+
+    return `${pad(d.getFullYear())}${pad(d.getMonth()+1)}${pad(d.getDate()+1)}`
 }
 
 export function generateRRULE(sec: AvailableSection): RRule {
@@ -17,8 +24,8 @@ export function generateRRULE(sec: AvailableSection): RRule {
     return new RRule({
         freq: RRule.WEEKLY,
         byweekday: [RRule.MO, RRule.FR],
-        dtstart: new Date(sec.semesterStartDate),
-        until: new Date(sec.semesterEndDate)
+        dtstart: new Date(sec.semesterStartDate!),
+        until: new Date(sec.semesterEndDate!)
     })
 }
 
@@ -51,8 +58,8 @@ BEGIN:VEVENT
 DTSTAMP:${toDT(new Date())}
 UID:${uuid()}
 ${generateRRULE(sec).toString()}
-DTSTART;TZID=America/Chicago:${toDT(new Date(sec.semesterStartDate))}
-DTEND;TZID=America/Chicago:${toDT(new Date(sec.semesterEndDate))}
+DTSTART;TZID=America/Chicago:${toDT(parseTime(`${sec.semesterStartDate!} ${sec.meetingStartTime!}`)!)}
+DTEND;TZID=America/Chicago:${toDT(parseTime(`${sec.semesterEndDate!} ${sec.meetingEndTime!}`)!)}
 SUMMARY:${sec.subject} ${sec.catalogNumber} (${sec.instructor})[${sec.sectionIdentifier}]
 LOCATION:${sec.location}
 END:VEVENT

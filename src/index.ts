@@ -2,35 +2,49 @@
 
 import fs from 'fs'
 import path from 'path'
-import chalk from 'chalk'
 import dotenv from 'dotenv'
-import { program, Command, Option } from 'commander'
 import puppet from './puppet'
+import { info, error, success } from './prettyPrint'
+import { program, Command, Option } from 'commander'
 import { PSCredentials } from './PSCredentials'
-
-const info = chalk.grey
-const error = chalk.redBright
-const success = chalk.greenBright.bold;
 
 program
     .version(process.env.npm_package_version || "")
     .description(process.env.npm_package_description || "")
     .arguments('<subject> <catalogNumber>')
     .requiredOption('--cred <string>', 'Location of .env file with credentials', '.env')
-    .option('--puppet <string>', 'JSON of puppeteer.launch() configuration', '{}')
+    .option('--puppet <string>', 'Location of .json file with puppeteer.launch() configuration', 'config.json')
+    .option('--out <string>', 'When specified, the output will be written to JSON files in the specified directory', '<none>')
     .action(async (subject, catalogNumber, command: Command) => {
         console.log(subject)
         console.log(catalogNumber)
-        const config: unknown = dotenv.parse(
+        const cred: unknown = dotenv.parse(
             fs.readFileSync(
                 path.resolve(command.cred!)
             )
         )
 
-        console.log(program.puppet!)
+        const config: unknown = program.puppet! === '' ? {} : JSON.parse(
+            fs.readFileSync(
+                path.resolve(command.puppet!)
+            ).toString()
+        )
 
-        let result = await puppet(subject, catalogNumber, config as PSCredentials, JSON.parse(command.puppet!))
-        console.log(result)
+        console.log(config)
+
+        let result = await puppet(subject, catalogNumber, cred as PSCredentials, config as any)
+
+        if(program.out! !== '<none>') {
+            for(let item of result) {
+                info(`Writing files for ${item.sectionIdentifier}`)
+                fs.writeFileSync(path.join(program.out!, `${item.subject}${item.catalogNumber}-${item.sectionIdentifier}.json`), JSON.stringify(item, undefined, 1))
+                fs.writeFileSync(path.join(program.out!, `${item.subject}${item.catalogNumber}-${item.sectionIdentifier}.ics`), item.calendarFile)
+            }
+            success('Done!')
+        }
+        else {
+            console.log(result)
+        }
     })
     .parse(process.argv);
 

@@ -1,15 +1,20 @@
 
+import { info, error, success } from './prettyPrint'
 import puppeteer from 'puppeteer'
 import AvailableSection from './AvailableSection';
 import { PSCredentials } from './PSCredentials';
 
-export default async function puppet(subject: string, catalogNumber:string, cred: PSCredentials, puppeteerOptions: object): Promise<AvailableSection[]> {
+export default async function puppet(subject: string, catalogNumber:string, cred: PSCredentials, config: any): Promise<AvailableSection[]> {
     const snooze = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const browser = await puppeteer.launch(puppeteerOptions)
+    info('Opening browser')
+    const browser = await puppeteer.launch(config.puppeteer)
     const page = await browser.newPage()
 
+    info('Navigating to https://saprd.my.uh.edu/')
     await page.goto('https://saprd.my.uh.edu/')
+
+    info('Logging in')
 
     // Select "UH Central"
     await page.waitFor('label[for=myuh]')
@@ -34,7 +39,10 @@ export default async function puppet(subject: string, catalogNumber:string, cred
         page.click('input[type=Submit]'), // Clicking the link will indirectly cause a navigation
     ]);
 
+    response.headers()['respondingwithsignonpage'] ? error('[⛔] Denied') : success('[✅] Logged in!')
+
     // "Student Center"
+    info('Clicking "Student Center"')
     await page.waitFor(`div[id='win0divPTNUI_LAND_REC_GROUPLET$3']`)
     await page.click(`div[id='win0divPTNUI_LAND_REC_GROUPLET$3']`)
 
@@ -44,9 +52,13 @@ export default async function puppet(subject: string, catalogNumber:string, cred
 
     let i = 0;
 
+
     // "Search"
+    info('Clicking "Search"')
     await frame.waitForSelector('tr #DERIVED_SSS_SCR_SSS_LINK_ANCHOR1')
     await frame.click('tr #DERIVED_SSS_SCR_SSS_LINK_ANCHOR1')
+
+    info('Filling form')
 
     // Subject selector
     await frame.waitForSelector('tbody #SSR_CLSRCH_WRK_SUBJECT_SRCH\\$1')
@@ -61,11 +73,13 @@ export default async function puppet(subject: string, catalogNumber:string, cred
     await frame.focus('tbody #SSR_CLSRCH_WRK_CATALOG_NBR\\$2')
     await page.keyboard.type(catalogNumber)
 
+    info('Submitting form')
     // Click the submit button, which will fail if done too quickly???
     await frame.waitForSelector('td > #win0divCLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH #CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH')
     await snooze(2000)
     await frame.click('td > #win0divCLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH #CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH')
 
+    info('Scraping DOM')
     await frame.waitForSelector('#trSSR_CLSRCH_MTG1\\$1_row1')
 
     let data = await frame.evaluate(async () => {
@@ -95,6 +109,7 @@ export default async function puppet(subject: string, catalogNumber:string, cred
         return Array.from(getRowElements()).map(row => getRowData(row))
     })
     
+    info('Closing browser')
     await browser.close()
     
     return data.map(e => new AvailableSection(subject, catalogNumber, e.map(e => (e === null || e === undefined) ? "" : e)));
