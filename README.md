@@ -6,7 +6,13 @@ A tool for scraping UH's PeopleSoft system for current registration info.
 
 ## Usage
 
-`npm install -g @cougargrades/peoplesoft`
+- To install:
+
+    `npm install -g @cougargrades/peoplesoft`
+
+- To use:
+
+    `cougarps --help`
 
 ## PeopleSoft Row Format
 
