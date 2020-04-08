@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# https://stackoverflow.com/a/2871034
+set -e
+
+if [[ -z "${PEOPLESOFT_SKIP_POSTINSTALLSH}" ]]; then
+  return 1
+fi
+
 # reference: https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md#alternative-setup-setuid-sandbox
 
 echo "\e[95mpostinstall.sh will request sudo permissions, to see why go to:"

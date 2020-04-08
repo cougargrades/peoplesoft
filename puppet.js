@@ -107,12 +107,4 @@ const puppeteer = require('puppeteer');
 
 
   await browser.close()
-
-  // "Schedule Planner"
-  //await frame.waitFor('#PRJCS_DERIVED_PRJCS_SCHD_PLN_PB')
-  //await frame.click('#PRJCS_DERIVED_PRJCS_SCHD_PLN_PB')
-
-  // "Open Schedule Planner"
-  //await frame.waitFor('#win0divPRJCS_DERIVED_PRJCS_LAUNCH_CS')
-  //await frame.click('#win0divPRJCS_DERIVED_PRJCS_LAUNCH_CS')
 })()
