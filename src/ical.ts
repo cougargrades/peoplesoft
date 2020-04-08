@@ -1,27 +1,28 @@
 import { RRule, RRuleSet, rrulestr } from 'rrule'
 import { v4 as uuid } from 'uuid'
+import AvailableSection from './AvailableSection'
 
-export function toDT(d) {
+export function toDT(d: Date) {
     return `${toD(d)}T${d.getHours()}${d.getMinutes}${d.getSeconds()}Z`
 }
 
-export function toD(d) {
-    return `${d.getFullYear}${d.getMonth()+1}${d.getDate()+1}`
+export function toD(d: Date) {
+    return `${d.getFullYear()}${d.getMonth()+1}${d.getDate()+1}`
 }
 
-export function generateRRULE({ meetingTimeWritten, meetingStartDate, meetingEndDate }) {
+export function generateRRULE(sec: AvailableSection): RRule {
 
     // writtenTime -> "MoWe 4:00PM-5:30PM"
 
     return new RRule({
         freq: RRule.WEEKLY,
         byweekday: [RRule.MO, RRule.FR],
-        dtstart: new Date(startDate).valueOf(),
-        until: new Date(endDate).valueOf()
+        dtstart: new Date(sec.semesterStartDate),
+        until: new Date(sec.semesterEndDate)
     })
 }
 
-export function generateICAL({ subject, catalogNumber, instructor, sectionIdentifier, meetingTimeWritten, meetingStartDate, meetingEndDate, location }) {
+export function generateICAL(sec: AvailableSection) {
 return `
 BEGIN:VCALENDAR
 VERSION:2.0
@@ -49,11 +50,11 @@ END:VTIMEZONE
 BEGIN:VEVENT
 DTSTAMP:${toDT(new Date())}
 UID:${uuid()}
-RRULE:${generateRRULE(arguments[0])}
-DTSTART;TZID=America/Chicago:${toDT(meetingStartDate)}
-DTEND;TZID=America/Chicago:${toDT(meetingEndDate)}
-SUMMARY:${subject} ${catalogNumber} (${instructor})[${sectionIdentifier}]
-LOCATION:${location}
+${generateRRULE(sec).toString()}
+DTSTART;TZID=America/Chicago:${toDT(new Date(sec.semesterStartDate))}
+DTEND;TZID=America/Chicago:${toDT(new Date(sec.semesterEndDate))}
+SUMMARY:${sec.subject} ${sec.catalogNumber} (${sec.instructor})[${sec.sectionIdentifier}]
+LOCATION:${sec.location}
 END:VEVENT
 END:VCALENDAR
 `
