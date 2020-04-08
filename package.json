@@ -13,9 +13,13 @@
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "postinstall": "sh postinstall.sh"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cougargrades/peoplesoft.git"
+  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@types/d3-time-format": "^2.1.1",
     "@types/dotenv": "^8.2.0",
