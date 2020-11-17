@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer'
 import AvailableSection from './AvailableSection';
 import { PSCredentials } from './PSCredentials';
 
-export default async function puppet(subject: string, catalogNumber:string, cred: PSCredentials, config: any): Promise<AvailableSection[]> {
+export default async function puppet(subject: string, catalogNumber: string, semesterCode: string, cred: PSCredentials, config: any): Promise<AvailableSection[]> {
     const snooze = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     info('Opening browser')
@@ -75,7 +75,7 @@ export default async function puppet(subject: string, catalogNumber:string, cred
 
     // Select the appropriate semester
     await frame.waitForSelector('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$')
-    await frame.select('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$', '2130')
+    await frame.select('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$', semesterCode)
 
     info('Submitting form')
     // Click the submit button, which will fail if done too quickly???

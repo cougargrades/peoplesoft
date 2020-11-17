@@ -11,13 +11,14 @@ import { PSCredentials } from './PSCredentials'
 program
     .version(process.env.npm_package_version || "")
     .description(process.env.npm_package_description || "")
-    .arguments('<subject> <catalogNumber>')
+    .arguments('<subject> <catalogNumber> <semesterCode>') // COSC 3360 2130
     .requiredOption('--cred <string>', 'Location of .env file with credentials', '.env')
     .option('--puppet <string>', 'Location of .json file with puppeteer.launch() configuration', 'config.json')
     .option('--out <string>', 'When specified, the output will be written to JSON files in the specified directory', '<none>')
-    .action(async (subject, catalogNumber, command: Command) => {
+    .action(async (subject, catalogNumber, semesterCode, command: Command) => {
         console.log(subject)
         console.log(catalogNumber)
+        console.log(semesterCode)
         const cred: unknown = dotenv.parse(
             fs.readFileSync(
                 path.resolve(command.cred!)
@@ -32,7 +33,7 @@ program
 
         console.log(config)
 
-        let result = await puppet(subject, catalogNumber, cred as PSCredentials, config as any)
+        let result = await puppet(subject, catalogNumber, semesterCode, cred as PSCredentials, config as any)
 
         if(program.out! !== '<none>') {
             for(let item of result) {

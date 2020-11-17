@@ -79,6 +79,7 @@ export default class AvailableSection {
 
         // Intepretted
         // Reference: https://icalendar.org/
-        this.calendarFile = ical.generateICAL(this);
+        //this.calendarFile = ical.generateICAL(this);
+        this.calendarFile = "";
     }
 }
