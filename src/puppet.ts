@@ -60,6 +60,11 @@ export default async function puppet(subject: string, catalogNumber: string, sem
 
     info('Filling form')
 
+    // Select the appropriate semester
+    await frame.waitForSelector('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$')
+    await frame.select('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$', semesterCode)
+    await snooze(2000)
+
     // Subject selector
     await frame.waitForSelector('tbody #SSR_CLSRCH_WRK_SUBJECT_SRCH\\$1')
     await frame.select('tbody #SSR_CLSRCH_WRK_SUBJECT_SRCH\\$1', subject)
@@ -72,10 +77,6 @@ export default async function puppet(subject: string, catalogNumber: string, sem
     await frame.waitForSelector('tbody #SSR_CLSRCH_WRK_CATALOG_NBR\\$2')
     await frame.focus('tbody #SSR_CLSRCH_WRK_CATALOG_NBR\\$2')
     await page.keyboard.type(catalogNumber)
-
-    // Select the appropriate semester
-    await frame.waitForSelector('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$')
-    await frame.select('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$', semesterCode)
 
     info('Submitting form')
     // Click the submit button, which will fail if done too quickly???
