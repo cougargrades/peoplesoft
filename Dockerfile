@@ -22,6 +22,7 @@ WORKDIR /usr/src/app
 COPY --chown=chrome package.json package-lock.json ./
 RUN npm install
 COPY --chown=chrome . ./
+RUN npx --prefix . ttsc
 
 # Container setup
 EXPOSE 1234/tcp
