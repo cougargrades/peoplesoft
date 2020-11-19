@@ -6,6 +6,8 @@ import { setQueues, UI } from 'bull-board';
 import puppeteer from 'puppeteer';
 import { snooze } from '@au5ton/snooze';
 
+import { readConfigFromDisk } from './config';
+
 type Foo = { message: string }
 
 const jobs = new Queue<Foo>('Jobs');
@@ -13,6 +15,9 @@ setQueues([jobs]);
 
 jobs.process(async (job) => {
   
+  const config = await readConfigFromDisk();
+  console.log(config);
+
   let browser = await puppeteer.launch({
     args: [
       '--headless',

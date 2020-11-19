@@ -25,4 +25,5 @@ COPY --chown=chrome . ./
 
 # Container setup
 EXPOSE 1234/tcp
+VOLUME /config
 ENTRYPOINT ["/init"]
