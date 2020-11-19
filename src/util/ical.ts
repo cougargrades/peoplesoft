@@ -1,6 +1,6 @@
 import { RRule, RRuleSet, rrulestr } from 'rrule'
 import { v4 as uuid } from 'uuid'
-import AvailableSection from './AvailableSection'
+import AvailableSection from '../model/AvailableSection'
 
 import { timeParse } from 'd3-time-format'
 const parseTime = timeParse('%m/%d/%Y %I:%M%p') // 01/13/2020 5:30PM

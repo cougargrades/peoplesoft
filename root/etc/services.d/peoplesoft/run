@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv sh
+
+#exec s6-setuidgid chrome echo $NPM_CONFIG_PREFIX
+exec s6-setuidgid chrome /usr/bin/node /usr/src/app/dist/index.js

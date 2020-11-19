@@ -1,51 +1,87 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node-script
 
-import fs from 'fs'
-import path from 'path'
-import dotenv from 'dotenv'
-import puppet from './puppet'
-import { info, error, success } from './prettyPrint'
-import { program, Command, Option } from 'commander'
-import { PSCredentials } from './PSCredentials'
+import express from 'express';
+import Queue from 'bull';
+import { setQueues, UI } from 'bull-board';
+import puppeteer from 'puppeteer';
+import { snooze } from '@au5ton/snooze';
 
-program
-    .version(process.env.npm_package_version || "")
-    .description(process.env.npm_package_description || "")
-    .arguments('<subject> <catalogNumber> <semesterCode>') // COSC 3360 2130
-    .requiredOption('--cred <string>', 'Location of .env file with credentials', '.env')
-    .option('--puppet <string>', 'Location of .json file with puppeteer.launch() configuration', 'config.json')
-    .option('--out <string>', 'When specified, the output will be written to JSON files in the specified directory', '<none>')
-    .action(async (subject, catalogNumber, semesterCode, command: Command) => {
-        console.log(subject)
-        console.log(catalogNumber)
-        console.log(semesterCode)
-        const cred: unknown = dotenv.parse(
-            fs.readFileSync(
-                path.resolve(command.cred!)
-            )
-        )
+import { readConfigFromDisk, SAMPLE_PSID } from './util/config';
+import * as puppet from './util/puppet';
+import * as prettyPrint from './util/prettyPrint';
+import * as telegram from './util/telegram';
 
-        const config: unknown = program.puppet! === '' ? {} : JSON.parse(
-            fs.readFileSync(
-                path.resolve(command.puppet!)
-            ).toString()
-        )
+(async () => {
+  let config = await readConfigFromDisk();
+  if (config.Authentication.PeopleSoftIDNumber === SAMPLE_PSID) {
+    prettyPrint.error('Please update the config.json file to include your own information!');
+    return;
+  }
+})();
 
-        console.log(config)
+const jobs = new Queue('Jobs');
+setQueues([jobs]);
 
-        let result = await puppet(subject, catalogNumber, semesterCode, cred as PSCredentials, config as any)
+jobs.process(async (job) => {
+  console.log('Job spawned!')
 
-        if(program.out! !== '<none>') {
-            for(let item of result) {
-                info(`Writing files for ${item.sectionIdentifier}`)
-                fs.writeFileSync(path.join(program.out!, `${item.subject}${item.catalogNumber}-${item.sectionIdentifier}.json`), JSON.stringify(item, undefined, 1))
-                fs.writeFileSync(path.join(program.out!, `${item.subject}${item.catalogNumber}-${item.sectionIdentifier}.ics`), item.calendarFile)
-            }
-            success('Done!')
+  // Read config from disk (will also create if it doesn't exist)
+  const config = await readConfigFromDisk();
+  if (config.Authentication.PeopleSoftIDNumber === SAMPLE_PSID) {
+    prettyPrint.error('Please update the config.json file to include your own information!');
+    return;
+  }
+
+  // Business logic
+  let i = 0;
+
+  // for every course that we want to scrape
+  for (let course of config.Courses) {
+    // scrape its sections
+    let sections = await puppet.scrape(config.Authentication, course);
+    // update progress
+    await job.progress(Math.ceil((i++ / config.Courses.length) * 100));
+    // for every section in the results
+    for (let section of sections) {
+      // check if the section is "open" and if its a section we even care about
+      let willSendNotification = false;
+      // if no sections are provided, send a notification for ANY open section
+      if (course.DesiredSectionNumbers.length === 0) {
+        if (section.registrationStatus !== 'Closed' && section.registrationStatus !== 'Wait List') {
+          willSendNotification = true;
         }
-        else {
-            console.log(result)
+      }
+      else {
+        if (section.registrationStatus !== 'Closed' && section.registrationStatus !== 'Wait List' && course.DesiredSectionNumbers.includes(section.sectionIdentifier)) {
+          willSendNotification = true;
         }
-    })
-    .parse(process.argv);
+      }
 
+      if (willSendNotification) {
+        prettyPrint.cyan('📧 Telegram message sent!');
+        await telegram.sendMessage(config.Telegram, `
+<b><u>${course.Subject} ${course.CatalogNumber} is ${section.registrationStatus}!</u></b> 
+
+Section #: <code>${section.sectionIdentifier}</code>
+Registration Status: <code>${section.registrationStatus}</code>
+
+Instructor: <code>${section.instructor}</code>
+Meeting Time: <code>${section.meetingTimeWritten}</code>
+Instruction Mode: <code>${section.instructionMode}</code>
+        `);
+      }
+
+    }
+  }
+
+  return;
+});
+
+jobs.add({}, { repeat: { cron: '*/5 * * * *' } })
+//jobs.add({})
+
+const app = express();
+app.use('/', UI);
+app.listen(1234, () => {
+  console.log(`Example app listening at http://localhost:1234`);
+});

@@ -1,14 +1,25 @@
 
-import { info, error, success } from './prettyPrint'
 import puppeteer from 'puppeteer'
-import AvailableSection from './AvailableSection';
-import { PSCredentials } from './PSCredentials';
+import { ConfigAuth, ConfigCourse, ConfigRoot } from './config';
+import { snooze } from '@au5ton/snooze';
+import { info, error, success } from './prettyPrint'
+import AvailableSection from '../model/AvailableSection';
 
-export default async function puppet(subject: string, catalogNumber: string, semesterCode: string, cred: PSCredentials, config: any): Promise<AvailableSection[]> {
-    const snooze = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export async function scrape(auth: ConfigAuth, course: ConfigCourse): Promise<AvailableSection[]> {
 
     info('Opening browser')
-    const browser = await puppeteer.launch(config.puppeteer)
+    const browser = await puppeteer.launch({
+      args: [
+        '--headless',
+        '--no-sandbox',
+        '--disable-gpu',
+        '--window-size=1920,1080',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+      ]
+    });
+
+    info(`Started ${await browser.version()}`);
     const page = await browser.newPage()
 
     info('Navigating to https://saprd.my.uh.edu/')
@@ -23,12 +34,12 @@ export default async function puppet(subject: string, catalogNumber: string, sem
     // Type username
     await page.waitFor('#userid')
     await page.focus('#userid')
-    await page.keyboard.type(cred.PSID)
+    await page.keyboard.type(auth.PeopleSoftIDNumber)
 
     // Type password
     await page.waitFor('#pwd')
     await page.focus('#pwd')
-    await page.keyboard.type(cred.PSPWD)
+    await page.keyboard.type(auth.PeopleSoftPassword)
 
     // Submit button
     await page.waitFor('input[type=Submit]')
@@ -41,6 +52,12 @@ export default async function puppet(subject: string, catalogNumber: string, sem
 
     response.headers()['respondingwithsignonpage'] ? error('[⛔] Denied') : success('[✅] Logged in!')
 
+    // if login was denied
+    // if(response.headers()['respondingwithsignonpage']) {
+    //   await browser.close();
+    //   throw "Login failed";
+    // }
+
     // "Student Center"
     info('Clicking "Student Center"')
     await page.waitFor(`div[id='win0divPTNUI_LAND_REC_GROUPLET$3']`)
@@ -49,9 +66,6 @@ export default async function puppet(subject: string, catalogNumber: string, sem
     // inner peoplesoft iframe
     await page.waitFor('#ptifrmtgtframe')
     const frame = await page.frames().find(frame => frame.name() === 'TargetContent')!;
-
-    let i = 0;
-
 
     // "Search"
     info('Clicking "Search"')
@@ -62,12 +76,12 @@ export default async function puppet(subject: string, catalogNumber: string, sem
 
     // Select the appropriate semester
     await frame.waitForSelector('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$')
-    await frame.select('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$', semesterCode)
+    await frame.select('tbody #CLASS_SRCH_WRK2_STRM\\$35\\$', course.SemesterCode)
     await snooze(2000)
 
     // Subject selector
     await frame.waitForSelector('tbody #SSR_CLSRCH_WRK_SUBJECT_SRCH\\$1')
-    await frame.select('tbody #SSR_CLSRCH_WRK_SUBJECT_SRCH\\$1', subject)
+    await frame.select('tbody #SSR_CLSRCH_WRK_SUBJECT_SRCH\\$1', course.Subject)
 
     // Uncheck "Open Only"
     await frame.waitForSelector('tbody #SSR_CLSRCH_WRK_SSR_OPEN_ONLY\\$4')
@@ -76,7 +90,7 @@ export default async function puppet(subject: string, catalogNumber: string, sem
     // Type in the catalog number
     await frame.waitForSelector('tbody #SSR_CLSRCH_WRK_CATALOG_NBR\\$2')
     await frame.focus('tbody #SSR_CLSRCH_WRK_CATALOG_NBR\\$2')
-    await page.keyboard.type(catalogNumber)
+    await page.keyboard.type(course.CatalogNumber)
 
     info('Submitting form')
     // Click the submit button, which will fail if done too quickly???
@@ -84,10 +98,12 @@ export default async function puppet(subject: string, catalogNumber: string, sem
     await snooze(2000)
     await frame.click('td > #win0divCLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH #CLASS_SRCH_WRK2_SSR_PB_CLASS_SRCH')
 
-    info('Scraping DOM')
-    await frame.waitForSelector('#trSSR_CLSRCH_MTG1\\$1_row1')
+    info('Loading results')
+    await frame.waitForSelector('#ACE_DERIVED_CLSRCH_GROUP6')
 
-    let data = await frame.evaluate(async () => {
+    info('Scraping DOM')
+    //console.log(await page.screenshot({ encoding: 'base64' }))
+    let data = await frame.evaluate(() => {
         // Sample, see screenshot:
         // https://gist.github.com/au5ton/262a22975afdbde7a88bff670f94eef7#gistcomment-3244673
         function getRowElements() {
@@ -111,11 +127,11 @@ export default async function puppet(subject: string, catalogNumber: string, sem
             return columns.map((e, i) => i !== 10 ? e.textContent?.trim() : e?.querySelector('img')?.getAttribute('alt'))
         }
 
-        return Array.from(getRowElements()).map(row => getRowData(row))
+        return Promise.resolve(Array.from(getRowElements()).map(row => getRowData(row)));
     })
     
     info('Closing browser')
     await browser.close()
     
-    return data.map(e => new AvailableSection(subject, catalogNumber, e.map(e => (e === null || e === undefined) ? "" : e)));
+    return data.map(e => new AvailableSection(course.Subject, course.CatalogNumber, e.map(e => (e === null || e === undefined) ? "" : e)));
 }
