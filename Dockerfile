@@ -22,7 +22,6 @@ WORKDIR /usr/src/app
 COPY --chown=chrome package.json package-lock.json ./
 RUN npm install
 COPY --chown=chrome . ./
-# RUN chown -R chrome:chrome /usr/src/app
 
 # Container setup
 EXPOSE 1234/tcp
