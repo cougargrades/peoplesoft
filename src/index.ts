@@ -47,12 +47,12 @@ jobs.process(async (job) => {
       let willSendNotification = false;
       // if no sections are provided, send a notification for ANY open section
       if (course.DesiredSectionNumbers.length === 0) {
-        if (section.registrationStatus !== 'Close' && section.registrationStatus !== 'Wait List') {
+        if (section.registrationStatus !== 'Closed' && section.registrationStatus !== 'Wait List') {
           willSendNotification = true;
         }
       }
       else {
-        if (section.registrationStatus !== 'Close' && section.registrationStatus !== 'Wait List' && course.DesiredSectionNumbers.includes(section.sectionIdentifier)) {
+        if (section.registrationStatus !== 'Closed' && section.registrationStatus !== 'Wait List' && course.DesiredSectionNumbers.includes(section.sectionIdentifier)) {
           willSendNotification = true;
         }
       }
