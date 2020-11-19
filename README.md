@@ -1,6 +1,6 @@
 # @cougargrades/peoplesoft
 
-![Docker Image Version (latest by date)](https://img.shields.io/docker/v/cougargrades/peoplesoft?arch=amd64&sort=date)
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/cougargrades/peoplesoft?arch=amd64&sort=date)](https://hub.docker.com/r/cougargrades/peoplesoft)
 
 A tool for scraping UH's PeopleSoft system for current registration info.
 
