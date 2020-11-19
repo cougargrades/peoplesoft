@@ -34,8 +34,8 @@ A tool for scraping UH's PeopleSoft system for current registration info.
       ],
       "Telegram": 
       {
-        "BotToken": "1374461256:AAHpqSzUJza8hiMHMVb1bPGcsuOLb56pcek",
-        "ChatId": "80379146"
+        "BotToken": "sadfsadfsd",
+        "ChatId": "11111111"
       }
     }
     ```
