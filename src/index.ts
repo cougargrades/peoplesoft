@@ -44,7 +44,7 @@ jobs.process(async (job) => {
     // for every section in the results
     for (let section of sections) {
       // check if the section is "open" and if its a section we even care about
-      let willSendNotification = true;
+      let willSendNotification = false;
       // if no sections are provided, send a notification for ANY open section
       if (course.DesiredSectionNumbers.length === 0) {
         if (section.registrationStatus !== 'Close' && section.registrationStatus !== 'Wait List') {
@@ -58,6 +58,7 @@ jobs.process(async (job) => {
       }
 
       if (willSendNotification) {
+        prettyPrint.cyan('📧 Telegram message sent!');
         await telegram.sendMessage(config.Telegram, `
 <b><u>${course.Subject} ${course.CatalogNumber} is ${section.registrationStatus}!</u></b> 
 
@@ -76,8 +77,8 @@ Instruction Mode: <code>${section.instructionMode}</code>
   return;
 });
 
-//jobs.add({}, { repeat: { cron: '* * * * *' } })
-jobs.add({})
+jobs.add({}, { repeat: { cron: '*/5 * * * *' } })
+//jobs.add({})
 
 const app = express();
 app.use('/', UI);

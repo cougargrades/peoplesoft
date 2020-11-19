@@ -52,6 +52,12 @@ export async function scrape(auth: ConfigAuth, course: ConfigCourse): Promise<Av
 
     response.headers()['respondingwithsignonpage'] ? error('[⛔] Denied') : success('[✅] Logged in!')
 
+    // if login was denied
+    // if(response.headers()['respondingwithsignonpage']) {
+    //   await browser.close();
+    //   throw "Login failed";
+    // }
+
     // "Student Center"
     info('Clicking "Student Center"')
     await page.waitFor(`div[id='win0divPTNUI_LAND_REC_GROUPLET$3']`)
