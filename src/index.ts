@@ -2,7 +2,7 @@
 
 import express from 'express';
 import Queue from 'bull';
-import { setQueues, UI } from 'bull-board';
+import { BullAdapter, setQueues, router } from 'bull-board';
 import puppeteer from 'puppeteer';
 import { snooze } from '@au5ton/snooze';
 
@@ -20,7 +20,7 @@ import * as telegram from './util/telegram';
 })();
 
 const jobs = new Queue('Jobs');
-setQueues([jobs]);
+setQueues([ new BullAdapter(jobs) ]);
 
 jobs.process(async (job) => {
   console.log('Job spawned!')
@@ -81,7 +81,7 @@ jobs.add({}, { repeat: { cron: '*/5 * * * *' } })
 //jobs.add({})
 
 const app = express();
-app.use('/', UI);
+app.use('/', router);
 app.listen(1234, () => {
   console.log(`Example app listening at http://localhost:1234`);
 });
