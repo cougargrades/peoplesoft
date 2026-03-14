@@ -1,12 +1,17 @@
 {
 	"$schema": "https://www.schemastore.org/tsconfig",
+  "include": ["src"],
+  "exclude": ["node_modules"],
 	"compilerOptions": {
 		"target": "esnext",
 		"module": "ESNext",
     "lib": ["ESNext", "DOM"],
 		"moduleResolution": "bundler",
+    "outDir": "dist",
+    "rootDir": "src",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": false,
+    "declaration": true
 	}
 }

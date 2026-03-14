@@ -4,8 +4,19 @@
   "type": "module",
   "description": "",
   "license": "MIT",
+  "repository": {
+    "url": "https://github.com/cougargrades/peoplesoft"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
     "build": "tsc",
