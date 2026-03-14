@@ -1,11 +1,7 @@
 # see: https://help.github.com/en/actions/language-and-framework-guides/publishing-nodejs-packages#publishing-packages-to-npm-and-github-packages
-name: Release
+name: Release & CI
 on:
   push:
-    branches:
-      - master # or main
-      - beta
-      - alpha
   workflow_dispatch:
     inputs:
 
@@ -15,9 +11,36 @@ permissions:
   contents: read # for checkout
 
 jobs:
+  ci:
+    name: Build and test on Node ${{ matrix.node_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node_version: ['22.x', '24.x']
+        os: [ubuntu-latest, windows-latest] # previously [ubuntu-latest, windows-latest, macOS-latest]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node_version }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+      - name: Install dependencies
+        run: pnpm -r install
+      - name: Run TSC
+        run: pnpm run tsc
+      - name: Run build
+        run: pnpm run build
+      - name: Run tests
+        run: pnpm run test
+  
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: [ci]
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
