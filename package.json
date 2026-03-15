@@ -1,6 +1,6 @@
 {
   "name": "@cougargrades/peoplesoft",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "type": "module",
   "description": "",
   "license": "MIT",
@@ -20,8 +20,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "tsc": "tsc",
-    "test": "vitest"
+    "tsc": "tsc --noEmit",
+    "test": "vitest",
+    "test:debugger": "vitest --test-timeout=0 --no-file-parallelism"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
