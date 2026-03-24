@@ -143,6 +143,26 @@ export const PageModelSchema = z.object({
    * `client.submit()`.
    */
   actions: z.array(z.string()).default([]),
+}).transform(raw => {
+
+  function $getField(predicate: (value: FormField, index: number, obj: FormField[]) => boolean) {
+    return Object.values(raw.fields).find((value, index, arr) => predicate(value, index, arr))
+  }
+
+  function $getFieldByLabel(label: string) {
+    return $getField(f => f.label === label)
+  }
+
+  function $getFieldById(fuzzyId: string) {
+    return $getField(f => f.id === fuzzyId || f.id.startsWith(fuzzyId));
+  }
+
+  return {
+    ...raw,
+    $getField,
+    $getFieldByLabel,
+    $getFieldById,
+  }
 })
 
 export type PageModel = z.infer<typeof PageModelSchema>
